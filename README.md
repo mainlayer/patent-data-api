@@ -1,56 +1,67 @@
 # patent-data-api
-![CI](https://github.com/mainlayer/patent-data-api/actions/workflows/ci.yml/badge.svg)
 
-Patent search and full-text patent records for AI agents — billed per query via Mainlayer.
+Patent search and full-text records sold to AI research agents per query via [Mainlayer](https://mainlayer.fr).
 
-## Install
+## Overview
 
-```bash
-pip install mainlayer httpx
-```
+Comprehensive patent database API: search millions of patents, retrieve full specifications with claims, and track inventor/assignee data. Pay-per-query.
 
-## Quickstart
+**API Docs:** https://patent-data-api.example.com/docs
+
+## Pricing
+
+- `/search` — $0.02 per query
+- `/patents/{id}` — $0.05 per full record (title, abstract, claims, citations)
+- `/patents` — $0.01 per query (list with filters)
+- `/health` — FREE
+
+## Agent Example: Patent Intelligence
 
 ```python
+from mainlayer import MainlayerClient
 import httpx
 
-response = httpx.get(
-    "https://your-api.com/search",
-    headers={"X-Mainlayer-Token": "your-token"},
-    params={"q": "neural network attention"}
-)
-print(response.json())
+client = MainlayerClient(api_key="sk_test_...")
+token = client.get_access_token("patent-data-api")
+
+# Search patents ($0.02)
+results = httpx.get(
+    "https://patent-data-api.example.com/search",
+    params={"q": "machine learning transformer", "limit": 5},
+    headers={"X-Mainlayer-Token": token}
+).json()
+
+# Get full patent details ($0.05)
+full = httpx.get(
+    f"https://patent-data-api.example.com/patents/{results[0]['id']}",
+    headers={"X-Mainlayer-Token": token}
+).json()
+print(f"Claims: {len(full['claims'])}")
 ```
 
 ## Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/patents` | List patents (filter by class, assignee) |
-| `GET` | `/patents/{id}` | Full patent detail with claims |
-| `GET` | `/search?q=` | Full-text search across title, abstract, claims |
-| `GET` | `/health` | Health check |
+| Method | Path | Cost | Description |
+|--------|------|------|-------------|
+| `GET` | `/search` | $0.02 | Full-text search (title, abstract, claims) |
+| `GET` | `/patents` | $0.01 | List patents (filter: `assignee`, `class`, `date_from`, `date_to`) |
+| `GET` | `/patents/{id}` | $0.05 | Full record: specification, claims, citations, prior art |
+| `GET` | `/health` | FREE | Health check |
 
-All data endpoints require `X-Mainlayer-Token` header.
-
-## Running locally
+## Install & Run
 
 ```bash
+pip install mainlayer httpx
 pip install -e ".[dev]"
 uvicorn src.main:app --reload
-```
-
-## Running tests
-
-```bash
 pytest tests/
 ```
 
-## Environment variables
+## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `MAINLAYER_API_KEY` | Your Mainlayer API key |
-| `MAINLAYER_RESOURCE_ID` | The resource ID for this API |
+```
+MAINLAYER_API_KEY      # Your Mainlayer API key
+MAINLAYER_RESOURCE_ID  # Resource ID from dashboard
+```
 
-📚 [mainlayer.fr](https://mainlayer.fr)
+📚 [Mainlayer Docs](https://docs.mainlayer.fr) | [mainlayer.fr](https://mainlayer.fr)
